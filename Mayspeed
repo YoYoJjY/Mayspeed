@@ -1,0 +1,99 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+
+local isFrozen = false -- Status für Freeze/Unfreeze
+local originalAnimationSpeeds = {} -- Tabelle für ursprüngliche Animationsgeschwindigkeiten
+
+local buttons = {
+{Name = "Speed 2", Action = function()
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+originalAnimationSpeeds[track] = track.Speed -- Speichere die ursprüngliche Geschwindigkeit
+track:AdjustSpeed(2) -- Animationen beschleunigen
+end
+end
+end},
+
+{Name = "Speed 0.3", Action = function()
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+originalAnimationSpeeds[track] = track.Speed -- Speichere die ursprüngliche Geschwindigkeit
+track:AdjustSpeed(0.3) -- Animationen in Slow Motion abspielen
+end
+end
+end},
+
+{Name = "Reverse", Action = function()
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+track:AdjustSpeed(-track.Speed) -- Spiele Animationen rückwärts ab
+end
+end
+end},
+
+{Name = "Freeze", Action = function()
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+if isFrozen then
+for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+if originalAnimationSpeeds[track] then
+track:AdjustSpeed(originalAnimationSpeeds[track]) -- Setze die ursprüngliche Geschwindigkeit zurück
+end
+end
+isFrozen = false
+else
+for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+originalAnimationSpeeds[track] = track.Speed -- Speichere die aktuelle Geschwindigkeit
+track:AdjustSpeed(0) -- Stoppe die Animation
+end
+isFrozen = true
+end
+end
+end}
+}
+
+-- Funktion, um die Animationen zurückzusetzen, wenn eine neue gestartet wird
+local function resetAnimationSpeed()
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+for track, originalSpeed in pairs(originalAnimationSpeeds) do
+if track.IsPlaying then
+track:AdjustSpeed(originalSpeed) -- Setze die ursprüngliche Geschwindigkeit zurück
+end
+end
+originalAnimationSpeeds = {} -- Tabelle zurücksetzen
+end
+end
+
+-- Verbindung für neue Animationen
+local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if humanoid then
+humanoid.AnimationPlayed:Connect(resetAnimationSpeed)
+end
+
+ScreenGui.Parent = game.CoreGui
+Frame.Parent = ScreenGui
+Frame.Position = UDim2.new(0.35, 0, 0.02, 0) -- Höher positioniert
+Frame.Size = UDim2.new(0, 400, 0, 40) -- Schmalere Größe
+Frame.BackgroundTransparency = 0.5
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+
+UIListLayout.Parent = Frame
+UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 5)
+
+for _, btn in pairs(buttons) do
+local Button = Instance.new("TextButton")
+Button.Parent = Frame
+Button.Size = UDim2.new(0, 90, 1, 0) -- Schmalere Buttons
+Button.Text = btn.Name
+Button.BackgroundColor3 = Color3.fromRGB(0, 102, 255)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.TextScaled = true
+Button.MouseButton1Click:Connect(btn.Action)
+end
